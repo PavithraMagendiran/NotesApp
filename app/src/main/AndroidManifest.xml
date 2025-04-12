@@ -12,9 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NotesApp"
         tools:targetApi="31">
-        <activity
-            android:name=".LoginLogout"
-            android:exported="false" />
+
         <activity
             android:name=".UpdateNoteActivity"
             android:exported="false" />
