@@ -2,64 +2,54 @@ package com.example.notesapp
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import android.view.Menu
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.NavigationUI
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.notesapp.databinding.ActivityAddnoteBinding
-import com.example.notesapp.databinding.ActivityMainBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.activity.ComponentActivity
+import androidx.lifecycle.ViewModelProvider
+import com.example.notesapp.viewmodel.NoteViewModel
+import com.example.notesapp.viewmodel.NoteViewModelFactory
+import com.example.notesapp.R
+import com.example.notesapp.repository.NoteRepository
+import com.example.notesapp.database.NoteDatabase
 
-class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var db: NoteDatabaseHelper
-    private lateinit var notesAdapter: NotesAdapter
 
+class MainActivity: AppCompatActivity() {
+
+    lateinit var noteViewModel: NoteViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_main)
-        //enableEdgeToEdge()
 
-//        val navView = findViewById<BottomNavigationView>(R.id.nav_view)
-//        val navHostFragment = supportFragmentManager
-//            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-//
-//        val navController = navHostFragment.navController
-//        val appBarConfig = AppBarConfiguration.Builder(R.id.navigation_color).build()
-//
-//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfig)
-//        NavigationUI.setupWithNavController(navView, navController)
-        
+        setupViewModel()
+    }
 
-        db = NoteDatabaseHelper(this)
-        notesAdapter = NotesAdapter(db.getAllNotes(),this)
+    private fun setupViewModel() {
 
-        binding.notesRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.notesRecyclerView.adapter = notesAdapter
+        val noteRepository = NoteRepository(NoteDatabase(this))
+        val viewModelProviderFactory = NoteViewModelFactory(application,noteRepository)
+        noteViewModel = ViewModelProvider(this,viewModelProviderFactory)[NoteViewModel::class.java]
+    }
 
-        binding.addButton.setOnClickListener{
-            val intent = Intent(this,AddnoteActivity::class.java)
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.home_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.settings) {
+            val intent = Intent(this, SettingsActivity::class.java)
             startActivity(intent)
-
+            return true
         }
 
+        return super.onOptionsItemSelected(item)
     }
-
-    override fun onResume() {
-        super.onResume()
-        notesAdapter.refreshData(db.getAllNotes())
-    }
-
-      fun onColorSelected(color: Int) {
-        val notesHeading = findViewById<android.widget.TextView>(R.id.notesHeading)
-        notesHeading.setTextColor(color)
-    }
-
 }
+
+
+
+
+
