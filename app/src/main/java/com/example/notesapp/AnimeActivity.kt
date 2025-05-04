@@ -20,7 +20,7 @@ class AnimeActivity : AppCompatActivity() {
         binding = ActivityAnimeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Start animations
+        // Start animation
         binding.splashImage.animation = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.top_anim)
         binding.splashImagetext.animation = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.bottom_anim)
 
