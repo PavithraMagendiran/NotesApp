@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF8E7"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="24dp">
+
+    <ImageView
+        android:id="@+id/splashImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/noteslogo"
+        android:contentDescription="@string/notes_app_logo"/>
+
+    <ImageView
+        android:id="@+id/splashImagetext"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:contentDescription="@string/notes_app_logo"
+        android:src="@drawable/notetext" />
+
+    <!--    <TextView-->
+<!--        android:id="@+id/splashText"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="@string/notes_app"-->
+<!--        android:fontFamily="@font/poppins"-->
+<!--        android:textColor="#E07A5F"-->
+<!--        android:textSize="32sp"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        android:textStyle="bold"/>-->
+</LinearLayout>

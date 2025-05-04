@@ -1,5 +1,6 @@
 package com.example.notesapp.fragments
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -20,37 +21,41 @@ import com.example.notesapp.R
 import com.example.notesapp.databinding.FragmentEditNoteBinding
 import com.example.notesapp.model.Note
 import com.example.notesapp.viewmodel.NoteViewModel
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.LocationServices
+
 
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note),MenuProvider {
-
-    private var editNoteBinding : FragmentEditNoteBinding?= null
+    private var editNoteBinding: FragmentEditNoteBinding? = null
     private val binding get() = editNoteBinding!!
 
     private lateinit var notesViewModel: NoteViewModel
     private lateinit var currentNote: Note
+    private var currentLocation: String? = null // <-- FIX: Initialize as null
 
     private val args: EditNoteFragmentArgs by navArgs()
 
-    //on create FragmenteditNote is Bound
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        editNoteBinding = FragmentEditNoteBinding.inflate(inflater, container,false)
+    ): View {
+        editNoteBinding = FragmentEditNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    //with help of viewmodel recycler view and done is used to save the changed data as string
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(this,viewLifecycleOwner, Lifecycle.State.RESUMED)
+        menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
 
         notesViewModel = (activity as MainActivity).noteViewModel
         currentNote = args.note!!
+
+        currentLocation = currentNote.location // <-- Now safe to set
 
         binding.editNoteTitle.setText(currentNote.noteTitle)
         binding.editNoteDesc.setText(currentNote.noteDesc)
@@ -59,17 +64,41 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note),MenuProvider {
             val noteTitle = binding.editNoteTitle.text.toString().trim()
             val noteDesc = binding.editNoteDesc.text.toString().trim()
 
-            if(noteTitle.isNotEmpty()){
-                val note = Note(currentNote.id, noteTitle, noteDesc)
+            if (noteTitle.isNotEmpty()) {
+                val note = Note(currentNote.id, noteTitle, noteDesc, currentLocation)
                 notesViewModel.updateNote(note)
-                view.findNavController().popBackStack(R.id.homeFragment,false)
-
-            }else{
-                Toast.makeText(context,"Please enter note Title", Toast.LENGTH_SHORT).show()
+                playSaveSound()
+                view.findNavController().popBackStack(R.id.homeFragment, false)
+            } else {
+                Toast.makeText(context, "Please enter note Title and description", Toast.LENGTH_SHORT).show()
             }
-
         }
 
+        //if the location icon is clicked, include the location
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        binding.editLocationButton?.setOnClickListener {
+            if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 102)
+                return@setOnClickListener
+            }
+
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val lat = location.latitude
+                    val lon = location.longitude
+                    currentLocation = "$lat,$lon"
+
+                    //with the help of lat and long the location is fetched in the maps
+                    val googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=$lat,$lon"
+                    val locationText = "\n\nLocation: $googleMapsUrl"
+
+                    binding.editNoteDesc.append(locationText)
+                } else {
+                    Toast.makeText(context, "Location not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     // Alert dialog box is popped up and note can be deleted or canceled
@@ -79,10 +108,13 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note),MenuProvider {
             setMessage("Do you want to delete this note?")
             setPositiveButton("Delete"){_,_ ->
                 notesViewModel.deleteNote(currentNote)
+                playSaveSound()
                 Toast.makeText(context,"Note Deleted", Toast.LENGTH_SHORT).show()
                 view?.findNavController()?.popBackStack(R.id.homeFragment,false)
             }
+            playSaveSound()
             setNegativeButton("Cancel",null)
+
         }.create().show()
     }
 
@@ -104,10 +136,21 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note),MenuProvider {
         }
     }
 
+    // Play sound function
+    private fun playSaveSound() {
+        val mediaPlayer = MediaPlayer.create(requireContext(), R.raw.donesound)
+        mediaPlayer.start()
+        mediaPlayer.setOnCompletionListener {
+            it.release()
+        }
+    }
+
     //destroys if we go to previous screen
     override fun onDestroy() {
         super.onDestroy()
         editNoteBinding = null
     }
+
+
 
 }

@@ -38,6 +38,16 @@
                 android:textSize="14sp"
                 android:fontFamily="@font/poppins"
                 android:textColor="@color/pink"/>
+            <TextView
+                android:id="@+id/noteLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/location_lat_0_0_lon_0_0"
+                android:textSize="12sp"
+                android:textColor="@android:color/darker_gray"
+                android:visibility="gone"
+                android:layout_marginTop="4dp"/>
+
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

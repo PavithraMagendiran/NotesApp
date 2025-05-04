@@ -1,27 +1,29 @@
 package com.example.notesapp.fragments
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.findNavController
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.notesapp.MainActivity
 import com.example.notesapp.R
-import com.example.notesapp.adapter.NoteAdapter
 import com.example.notesapp.databinding.FragmentAddNoteBinding
-import com.example.notesapp.databinding.FragmentHomeBinding
 import com.example.notesapp.model.Note
 import com.example.notesapp.viewmodel.NoteViewModel
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.LocationServices
+
 
 
 class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
@@ -31,6 +33,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
 
     private lateinit var notesViewModel: NoteViewModel
     private lateinit var addNoteView :View
+    private var currentLocation: String? = null
+
 
 
     // Keys for saving state
@@ -60,6 +64,32 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         addNoteView = view
         //setUpHomeRecyclerView()
 
+
+        //if the location icon is clicked, include the location
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        binding.locationButton?.setOnClickListener {
+            if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 101)
+                return@setOnClickListener
+            }
+
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val lat = location.latitude
+                    val lon = location.longitude
+                    currentLocation = "$lat,$lon"
+
+                    //with the help of lat and long the location is fetched in the maps
+                    val googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=$lat,$lon"
+                    val locationText = "\n\nLocation: $googleMapsUrl"
+                    binding.addNoteDesc.append(locationText)
+                } else {
+                    Toast.makeText(context, "Location not available", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
     }
 
     // Handling rotations and restore data
@@ -76,14 +106,18 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         val noteDesc = binding.addNoteDesc.text.toString().trim()
 
         if(noteTitle.isNotEmpty()){
-            val note = Note(0,noteTitle,noteDesc)
+            //val note = Note(0,noteTitle,noteDesc)
+            //val locationText = binding.addNoteLocation.text.toString().trim()
+            val note = Note(0, noteTitle, noteDesc, currentLocation)//, locationText)
             notesViewModel.addNote(note)
 
-            Toast.makeText(addNoteView.context,"Note Save",Toast.LENGTH_SHORT).show()
+            playSaveSound()
+
+            Toast.makeText(addNoteView.context,"Note Saved",Toast.LENGTH_SHORT).show()
             view.findNavController().popBackStack(R.id.homeFragment,false)
 
         }else{
-            Toast.makeText(addNoteView.context,"Please enter note Title",Toast.LENGTH_SHORT).show()
+            Toast.makeText(addNoteView.context,"Please enter both title and description ",Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -104,11 +138,22 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
         }
     }
 
+    // Play sound function
+    private fun playSaveSound() {
+        val mediaPlayer = MediaPlayer.create(requireContext(), R.raw.donesound)
+        mediaPlayer.start()
+        mediaPlayer.setOnCompletionListener {
+            it.release()
+        }
+    }
+
     //destroys if we go to previous screen
     override fun onDestroy() {
         super.onDestroy()
         addNoteBinding = null
     }
+
+
 
 
 }

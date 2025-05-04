@@ -11,5 +11,7 @@ data class Note(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
     val noteTitle: String,
-    val noteDesc: String
+    val noteDesc: String,
+    val location: String? = null // in your Note model and DB schema if persisting
+
 ): Parcelable

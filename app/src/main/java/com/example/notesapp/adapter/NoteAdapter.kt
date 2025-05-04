@@ -14,14 +14,8 @@ import com.example.notesapp.fragments.HomeFragmentDirections
 import com.example.notesapp.model.Note
 
 class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
-    //for providing views that represent items in a data set
-    //class NoteViewHolder(val itemBinding : NoteLayoutBinding) : RecyclerView.ViewHolder(itemBinding.root)
 
-    var onItemContextMenuClick: ((Note, Int) -> Unit)? = null
     var selectedPosition: Int = -1
-    //val note = noteAdapter.getNoteAt(position)
-
-
     // to show context menu
     inner class NoteViewHolder(val itemBinding: NoteLayoutBinding) :
         RecyclerView.ViewHolder(itemBinding.root),
@@ -81,9 +75,28 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     override fun onBindViewHolder(holder: NoteViewHolder, position: Int) {
         val currentNote = differ.currentList[position]
+        val context = holder.itemView.context
+
+
 
         holder.itemBinding.noteTitle.text = currentNote.noteTitle
         holder.itemBinding.noteDesc.text = currentNote.noteDesc
+
+        // Format and show location if available
+        currentNote.location?.split(",")?.let {
+            if (it.size == 2) {
+                val lat = it[0]
+                val lon = it[1]
+                holder.itemBinding.noteLocation?.text = context.getString(R.string.note_location, lat, lon)
+                holder.itemBinding.noteLocation?.visibility = View.VISIBLE
+
+            } else {
+                holder.itemBinding.noteLocation?.visibility = View.GONE
+
+            }
+        } ?: run {
+            holder.itemBinding.noteLocation?.visibility = View.GONE
+        }
 
         holder.itemView.setOnClickListener{
             val direction = HomeFragmentDirections.actionHomeFragmentToEditNoteFragment(currentNote)
